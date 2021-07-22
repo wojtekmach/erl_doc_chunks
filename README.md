@@ -3,7 +3,7 @@
 `erl_doc_chunks` is a Mix compiler that generates docs chunks for Erlang files.
 
 This project is a reminder that Mix works really well for building Erlang codebases too.
-I'm hoping things shown hear will come to Rebar & EUnit soon too!
+I'm hoping things shown here will come to Rebar & EUnit soon too!
 
 ## Usage
 
