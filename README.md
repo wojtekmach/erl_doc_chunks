@@ -35,7 +35,7 @@ See [`examples/foo`](examples/foo) project which is an Erlang project built with
 
      defp deps do
        [
-         {:erl_doc_chunks, path: "../.."}
+         {:erl_doc_chunks, github: "wojtekmach/erl_doc_chunks"}
        ]
      end
    end
