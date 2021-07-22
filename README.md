@@ -1,0 +1,169 @@
+# `erl_doc_chunks`
+
+`erl_doc_chunks` is a Mix compiler that generates docs chunks for Erlang files.
+
+This project is a reminder that Mix works really well for building Erlang codebases too.
+I'm hoping things shown hear will come to Rebar & EUnit soon too!
+
+## Usage
+
+See [`examples/foo`](examples/foo) project which is an Erlang project built with Mix. Also see
+[`examples/bar`](examples/bar) which is an Elixir project that uses `foo`.
+
+1. Create a Mix project for your Erlang codebase and install `erl_doc_chunks`:
+
+   ```bash
+   $ mix new foo
+   ```
+
+   It is important that the compiler is added last, it needs to run after the Erlang compiler.
+
+   ```elixir
+   # mix.exs
+   defmodule Foo.MixProject do
+     use Mix.Project
+
+     def project do
+       [
+         app: :foo,
+         version: "0.1.0",
+         elixir: "~> 1.10",
+         deps: deps(),
+         compilers: Mix.compilers() ++ [:erl_doc_chunks]
+       ]
+     end
+
+     defp deps do
+       [
+         {:erl_doc_chunks, path: "../.."}
+       ]
+     end
+   end
+   ```
+
+2. Document your Erlang file with Markdown:
+
+   ```erlang
+   %% @doc
+   %% The foo module.
+   -module(foo).
+   -export([hello/0, bar/0]).
+
+   %% @doc
+   %% Returns a hello.
+   %%
+   %% ## Examples
+   %%
+   %%     iex> :foo.hello()
+   %%     :world2
+   hello() ->
+     world.
+
+   bar() ->
+     bar.
+   ```
+
+   The choice of Markdown is totally arbitrary, any other documentation format would work.
+
+3. You can now access the docs from the IEx shell:
+
+   ```bash
+   $ iex -S mix
+   iex(1)> h :foo
+
+                                         :foo
+
+   The foo module.
+   ```
+
+   As well as from the Erlang shell:
+
+   ```bash
+   $ erl -pa _build/dev/lib/foo/ebin
+   1> h(foo).
+
+      foo
+
+       The foo module.
+
+   ok
+   ```
+
+4. You can write an ExUnit test case and use the doctest feature:
+
+   ```elixir
+   # test/foo_test.exs
+   defmodule :foo_test do
+     use ExUnit.Case, async: true
+     doctest :foo
+   end
+   ```
+
+   ```bash
+   $ mix test
+     1) doctest :foo.hello/0 (1) (:foo_test)
+        test/foo_test.exs:3
+        Doctest failed
+        doctest:
+          iex> :foo.hello()
+          :world2
+        code:  :foo.hello() === :world2
+        left:  :world
+        right: :world2
+        stacktrace:
+          src/foo.erl:11: :foo (module)
+
+
+
+   Finished in 0.02 seconds (0.02s async, 0.00s sync)
+   1 doctest, 1 failure
+   ```
+
+   This requires a tiny change in Elixir that I hope to upstream:
+
+   ```diff
+   diff --git a/lib/ex_unit/lib/ex_unit/doc_test.ex b/lib/ex_unit/lib/ex_unit/doc_test.ex
+   index 3a431bbd8..4170ffcce 100644
+   --- a/lib/ex_unit/lib/ex_unit/doc_test.ex
+   +++ b/lib/ex_unit/lib/ex_unit/doc_test.ex
+   @@ -159,7 +159,7 @@ def exception(opts) do
+          module = Keyword.fetch!(opts, :module)
+          message = Keyword.fetch!(opts, :message)
+
+   -      file = module.__info__(:compile)[:source] |> Path.relative_to_cwd()
+   +      file = module.module_info(:compile)[:source] |> Path.relative_to_cwd()
+          info = Exception.format_file_line(file, opts[:line])
+          %__MODULE__{message: info <> " " <> message}
+        end
+   @@ -223,7 +223,7 @@ def unquote(doc)(_), do: unquote(test)
+      @doc false
+      def __file__(module) do
+        source =
+   -      module.__info__(:compile)[:source] ||
+   +      module.module_info(:compile)[:source] ||
+            raise "#{inspect(module)} does not have compile-time source information"
+
+        "(for doctest at) " <> Path.relative_to_cwd(source)
+   @@ -273,7 +273,7 @@ defp test_name(%{fun_arity: {f, a}}, m, n) do
+      end
+
+      defp test_content(%{exprs: exprs, line: line}, module, do_import) do
+   -    file = module.__info__(:compile)[:source] |> Path.relative_to_cwd()
+   +    file = module.module_info(:compile)[:source] |> Path.relative_to_cwd()
+        location = [line: line, file: file]
+        stack = Macro.escape([{module, :__MODULE__, 0, location}])
+   ```
+
+## License
+
+Copyright (c) 2021 Wojtek Mach
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
