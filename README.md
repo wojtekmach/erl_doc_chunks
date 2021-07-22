@@ -119,40 +119,7 @@ See [`examples/foo`](examples/foo) project which is an Erlang project built with
    1 doctest, 1 failure
    ```
 
-   This requires a tiny change in Elixir that I hope to upstream:
-
-   ```diff
-   diff --git a/lib/ex_unit/lib/ex_unit/doc_test.ex b/lib/ex_unit/lib/ex_unit/doc_test.ex
-   index 3a431bbd8..4170ffcce 100644
-   --- a/lib/ex_unit/lib/ex_unit/doc_test.ex
-   +++ b/lib/ex_unit/lib/ex_unit/doc_test.ex
-   @@ -159,7 +159,7 @@ def exception(opts) do
-          module = Keyword.fetch!(opts, :module)
-          message = Keyword.fetch!(opts, :message)
-
-   -      file = module.__info__(:compile)[:source] |> Path.relative_to_cwd()
-   +      file = module.module_info(:compile)[:source] |> Path.relative_to_cwd()
-          info = Exception.format_file_line(file, opts[:line])
-          %__MODULE__{message: info <> " " <> message}
-        end
-   @@ -223,7 +223,7 @@ def unquote(doc)(_), do: unquote(test)
-      @doc false
-      def __file__(module) do
-        source =
-   -      module.__info__(:compile)[:source] ||
-   +      module.module_info(:compile)[:source] ||
-            raise "#{inspect(module)} does not have compile-time source information"
-
-        "(for doctest at) " <> Path.relative_to_cwd(source)
-   @@ -273,7 +273,7 @@ defp test_name(%{fun_arity: {f, a}}, m, n) do
-      end
-
-      defp test_content(%{exprs: exprs, line: line}, module, do_import) do
-   -    file = module.__info__(:compile)[:source] |> Path.relative_to_cwd()
-   +    file = module.module_info(:compile)[:source] |> Path.relative_to_cwd()
-        location = [line: line, file: file]
-        stack = Macro.escape([{module, :__MODULE__, 0, location}])
-   ```
+   Doctest support requires a [tiny change to the Elixir](https://github.com/elixir-lang/elixir/pull/11134).
 
 ## License
 
